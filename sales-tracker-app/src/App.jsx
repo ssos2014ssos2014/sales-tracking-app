@@ -13,6 +13,12 @@ import {
  
 const ADMIN_PASSWORD_KEY = "admin-password";
 const DEFAULT_ADMIN_PASSWORD = "admin123";
+
+// ---------- إعدادات Supabase ----------
+// عدّل هذا السطر برابط مشروعكم الحقيقي (يحتوي رمزًا فريدًا قبل supabase.co)
+// مثال صحيح: https://abcdefghijklmnop.supabase.co
+const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_58HMImyiyMwcCzVfAeWvGQ_ZcXkuBxR";
  
 const COLORS = {
   bg: "#F4F6F5",
@@ -79,20 +85,41 @@ function monthsBetween(start, end) {
   return res;
 }
  
-// طبقة التخزين: تعتمد مؤقتًا على window.storage المدمجة في بيئة Artifacts
-// الخاصة بـ Claude، لتجربة الميزات الجديدة مباشرة هنا. سيتم ربطها بـ Firebase
-// مرة أخرى لاحقًا لضمان التزامن بين الأجهزة.
+// طبقة التخزين: تعتمد على Supabase (قاعدة بيانات سحابية حقيقية) بدل التخزين
+// المحلي، بحيث تُخزَّن كل بيانات المناديب والمبيعات على خادم واحد مشترك
+// تتزامن معه كل الأجهزة (كمبيوتر أو جوال) فور فتح نفس رابط التطبيق.
 async function storageGet(key, shared) {
   try {
-    const r = await window.storage.get(key, shared);
-    return r ? JSON.parse(r.value) : null;
-  } catch {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/kv_store?key=eq.${encodeURIComponent(key)}&select=value`,
+      {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+      }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows.length ? rows[0].value : null;
+  } catch (e) {
+    console.error("storage get failed", e);
     return null;
   }
 }
 async function storageSet(key, value, shared) {
   try {
-    await window.storage.set(key, JSON.stringify(value), shared);
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=minimal",
+      },
+      body: JSON.stringify([{ key, value, updated_at: new Date().toISOString() }]),
+    });
+    if (!res.ok) console.error("storage set failed", await res.text());
   } catch (e) {
     console.error("storage set failed", e);
   }
