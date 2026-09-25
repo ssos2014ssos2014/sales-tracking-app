@@ -15,9 +15,7 @@ const ADMIN_PASSWORD_KEY = "admin-password";
 const DEFAULT_ADMIN_PASSWORD = "admin123";
 
 // ---------- إعدادات Supabase ----------
-// عدّل هذا السطر برابط مشروعكم الحقيقي (يحتوي رمزًا فريدًا قبل supabase.co)
-// مثال صحيح: https://abcdefghijklmnop.supabase.co
-const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
+const SUPABASE_URL = "https://gvnxvmfvlrsurxambvmc.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_58HMImyiyMwcCzVfAeWvGQ_ZcXkuBxR";
  
 const COLORS = {
